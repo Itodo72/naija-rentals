@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String           @id @default(uuid())
+  email          String           @unique
+  phone          String           @unique
+  passwordHash   String
+  firstName      String
+  lastName       String
+  role           Role
+  isVerified     Boolean          @default(false)
+  isActive       Boolean          @default(true)
+  subaccountCode String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  landlord       LandlordProfile?
+  tenant         TenantProfile?
+  listings       Listing[]
+  rentals        Rental[]
+  @@map("users")
+}
+
+enum Role {
+  LANDLORD
+  TENANT
+  ADMIN
+}
+
+model LandlordProfile {
+  id          String  @id @default(uuid())
+  userId      String  @unique
+  user        User    @relation(fields: [userId], references: [id])
+  isVerified  Boolean @default(false)
+  totalEarned Float   @default(0)
+  @@map("landlord_profiles")
+}
+
+model TenantProfile {
+  id         String @id @default(uuid())
+  userId     String @unique
+  user       User   @relation(fields: [userId], references: [id])
+  totalSpent Float  @default(0)
+  totalSaved Float  @default(0)
+  @@map("tenant_profiles")
+}
+
+model Listing {
+  id            String        @id @default(uuid())
+  landlordId    String
+  landlord      User          @relation(fields: [landlordId], references: [id])
+  title         String
+  type          String
+  description   String?
+  annualRent    Float
+  platformFee   Float
+  totalPrice    Float
+  state         String
+  lga           String
+  city          String
+  streetAddress String
+  latitude      Float?
+  longitude     Float?
+  bedrooms      Int
+  bathrooms     Int
+  hasParking    Boolean       @default(false)
+  hasBorehole   Boolean       @default(false)
+  hasGenerator  Boolean       @default(false)
+  contactPhone  String
+  contactEmail  String
+  status        ListingStatus @default(PENDING_REVIEW)
+  isActive      Boolean       @default(false)
+  rejectionNote String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  photos        ListingPhoto[]
+  rentals       Rental[]
+  @@map("listings")
+}
+
+enum ListingStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  RENTED
+  SUSPENDED
+  DELETED
+}
+
+model ListingPhoto {
+  id        String   @id @default(uuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id])
+  url       String
+  isPrimary Boolean  @default(false)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  @@map("listing_photos")
+}
+
+model Rental {
+  id           String       @id @default(uuid())
+  listingId    String
+  listing      Listing      @relation(fields: [listingId], references: [id])
+  tenantId     String
+  tenant       User         @relation(fields: [tenantId], references: [id])
+  rentAmount   Float
+  platformFee  Float
+  totalPaid    Float
+  paystackRef  String       @unique
+  escrowStatus EscrowStatus @default(AWAITING_PAYMENT)
+  paidAt       DateTime?
+  releasedAt   DateTime?
+  startDate    DateTime
+  endDate      DateTime
+  createdAt    DateTime     @default(now())
+  @@map("rentals")
+}
+
+enum EscrowStatus {
+  AWAITING_PAYMENT
+  PAYMENT_RECEIVED
+  RELEASED
+  REFUNDED
+  DISPUTED
+}
