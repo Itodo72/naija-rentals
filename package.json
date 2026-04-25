@@ -1,1 +1,15 @@
-
+{
+  "name": "naija-rentals",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@prisma/client": "5.10.0",
+    "axios": "1.6.7",
+    "bcryptjs": "2.4.3",
+    "js-cookie": "3.0.5",
+    "json
